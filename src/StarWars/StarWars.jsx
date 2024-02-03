@@ -95,6 +95,8 @@ const StarWars = () => {
           </div>
         ))}
       </InfiniteScroll>
+      {isFetching && <div className='text-center w-full'>Loading...</div>}
+      {!hasNextPage && <div className='text-center w-full'>No More Data</div>}
     </div>
   );
 };
