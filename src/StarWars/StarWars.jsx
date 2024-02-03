@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import InfiniteScroll from 'react-infinite-scroller';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { Person } from './Person';
 
 const initialApiUrl = 'https://swapi.dev/api/people/';
@@ -11,12 +12,26 @@ const fetchApiUrl = async (url) => {
 
 const StarWars = () => {
   const [data, setData] = useState(null);
+  // isLoading means we are fetching and we do not have cached data
+  const {
+    data: queryData = {},
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isLoading,
+    isError,
+    error,
+  } = useInfiniteQuery({
+    queryKey: ['starwars', initialApiUrl],
+    queryFn: ({ pageParam = initialApiUrl }) => fetchApiUrl(pageParam),
+    getNextPageParam: (lastPage) => lastPage.next || undefined,
+  });
 
-  useEffect(() => {
-    fetchApiUrl(initialApiUrl).then((res) => {
-      setData(res);
-    });
-  }, []);
+  // useEffect(() => {
+  //   fetchApiUrl(initialApiUrl).then((res) => {
+  //     setData(res);
+  //   });
+  // }, []);
 
   const loadMoreHandler = () => {
     fetchApiUrl(data.next).then((res) => {
@@ -27,6 +42,13 @@ const StarWars = () => {
   const hasMore = () => {
     return !!(data && data?.next);
   };
+
+  if (isLoading) return <div className='text-center w-full'>Loading...</div>;
+  console.log(queryData);
+  if (!queryData && !isLoading)
+    return <div className='text-center w-full'>No data</div>;
+
+  if (isError) return <div className='text-center w-full'>{error.message}</div>;
 
   return (
     <div className='container mx-auto my-10'>
@@ -45,7 +67,7 @@ const StarWars = () => {
           </button>
         )}
       </div>
-      <InfiniteScroll
+      {/* <InfiniteScroll
         pageStart={0}
         loadMore={loadMoreHandler}
         hasMore={hasMore()}
@@ -57,6 +79,21 @@ const StarWars = () => {
         ) : (
           <></>
         )}
+      </InfiniteScroll> */}
+
+      <InfiniteScroll
+        loadMore={() => {
+          if (!isFetching) fetchNextPage();
+        }}
+        hasMore={hasNextPage}
+      >
+        {queryData.pages.map((page, index) => (
+          <div key={index}>
+            {page.results.map((item, index) => (
+              <Person key={index} basicInfo={item} />
+            ))}
+          </div>
+        ))}
       </InfiniteScroll>
     </div>
   );
