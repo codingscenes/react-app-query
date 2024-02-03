@@ -14,7 +14,6 @@ const StarWars = () => {
 
   useEffect(() => {
     fetchApiUrl(initialApiUrl).then((res) => {
-      console.log(res);
       setData(res);
     });
   }, []);
@@ -25,18 +24,40 @@ const StarWars = () => {
     });
   };
 
+  const hasMore = () => {
+    return !!(data && data?.next);
+  };
+
   return (
     <div className='container mx-auto my-10'>
       <h1 className='text-2xl text-center'>Listing StartWars!</h1>
-      {data && data.results.map((item) => <Person basicInfo={item} />)}
+      {data &&
+        data.results.map((item, index) => (
+          <Person key={index} basicInfo={item} />
+        ))}
       <div className='w-full text-center'>
-        <button
-          className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
-          onClick={loadMoreHandler}
-        >
-          Load More
-        </button>
+        {hasMore() && (
+          <button
+            className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
+            onClick={loadMoreHandler}
+          >
+            Load More
+          </button>
+        )}
       </div>
+      <InfiniteScroll
+        pageStart={0}
+        loadMore={loadMoreHandler}
+        hasMore={hasMore()}
+      >
+        {data ? (
+          data.results.map((item, index) => (
+            <Person key={index} basicInfo={item} />
+          ))
+        ) : (
+          <></>
+        )}
+      </InfiniteScroll>
     </div>
   );
 };
